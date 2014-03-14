@@ -11,7 +11,12 @@ class Login extends CI_Controller {
 	public function index()
 	{
 		$error = array('error' => " ");
-		$this->load->view('login_page', $error);
+		$userInfo = $this->session->userdata('userInfo');
+ 		if(empty($userInfo['loginName']))
+			$this->load->view('login_page', $error);
+		else{
+			redirect('base');		
+		}
 	}
 	public function loginCheck(){
 		$this->load->model('customer_model');
@@ -32,6 +37,7 @@ class Login extends CI_Controller {
 		}else if($loginName == $customer->login && $password == $customer->password){
 			$userInfo = array('loginName' => $loginName, 'password' => $password, 'first' => $customer->first, 'last' => $customer->last);
 			$this->session->set_userdata('userInfo',$userInfo);
+			$this->session->set_userdata('shopping_cart', array());
 			redirect('base');
 		}
 		

@@ -1,5 +1,3 @@
-<h2>Edit Product</h2>
-
 <style>
 	input { display: block;}
 	.error {color:red;}
@@ -22,8 +20,5 @@
 	echo form_submit('submit', 'Give Up');
 	echo form_close();
 	echo "<img src='" . base_url() . "images/product/" . $product->photo_url . "' width='400px' />";
-
-
-
 ?>	
 

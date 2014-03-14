@@ -13,15 +13,20 @@ class Base extends CI_Controller {
 		$this->load->model("Product");
     }
 	public function index(){
-		$this->load->model('product_model');
-		$this->load->model('Product');
 		$userInfo = $this->session->userdata('userInfo');
+		$errmsg = $this->session->userdata('errmsg');
+		if(isset($errmsg)){
+			$data['exists'] = $errmsg;
+			$this->session->set_userdata('errmsg', '');
+		}
 		if(empty($userInfo['loginName']))
 			redirect('login');
-		$products = $this->product_model->getAll();
-		$data['products']=$products;
-		$data['userInfo']=$userInfo;
-		$this->load->view('main_page',$data);
+		else{
+			$products = $this->product_model->getAll();
+			$data['products']=$products;
+			$data['userInfo']=$userInfo;
+			$this->load->view('main_page',$data);
+		}
 	}
 	
 	
@@ -180,23 +185,62 @@ class Base extends CI_Controller {
 		$this->load->model("product_model");
 		$this->load->model("Product");
 		$userInfo = $this->session->userdata('userInfo');
-		if(empty($userInfo['loginName']))
+		$shopping_cart = $this->session->userdata('shopping_cart');
+		$exist = false;
+ 		if(empty($userInfo['loginName']))
 			redirect('login');			
-		$data['product'] = $this->product_model->get($id);
-		$this->load->view('product/add_shopping_cart_page.php',$data);
+		foreach ($shopping_cart as $exist_item){
+			if($id == $exist_item['product_id'])
+				$exist = true;
+		}
+		if(!$exist){
+			$data['product'] = $this->product_model->get($id);
+			$this->load->view('product/add_shopping_cart_page.php',$data);
+		}else{
+			$this->session->set_userdata('errmsg',"This item is in the shopping cart!");
+			redirect('base');
+		}			
 	}
 	
 	function confirm_adding($id){
+		$this->load->model("product_model");
 		$userInfo = $this->session->userdata('userInfo');
 		if(empty($userInfo['loginName']))
 			redirect('login');	
 		$this->load->library('form_validation');
 		$this->form_validation->set_rules('orderNumber','Order Number','required|numeric|greater_than[0]');
-		if ($this->form_validation->run() == true) {
+		$product = $this->product_model->get($id);
+		if ($this->form_validation->run() == true){
+			$shopping_cart_item = array('product_id'=>$id, 'number'=>$this->input->post('orderNumber'));
+			$shopping_cart = $this->session->userdata('shopping_cart');
+			array_push($shopping_cart, $shopping_cart_item);
+			$this->session->set_userdata('shopping_cart', $shopping_cart);
+			$this->load->view('adding_success');
 		}else{
-			$data['product'] = $this->product_model->get($id);
+			$data['product'] = $product;
 			$this->load->view('product/add_shopping_cart_page.php',$data);
 		}	
+	}
+	
+	function shopping_cart_main(){
+		$userInfo = $this->session->userdata('userInfo');
+		if(empty($userInfo['loginName']))
+			redirect('login');	
+		$shopping_cart = $this->session->userdata('shopping_cart');		
+		$products = array();
+		foreach ($shopping_cart as $shopping_cart_item){
+			$product = $this->product_model->get($shopping_cart_item['product_id']);
+			array_push($products, $product);
+		}
+		$data['products'] = $products;
+		$this->load->view('shopping_cart_main_page', $data);
+	}
+	function remove_item_shopping_cart(){
+		$userInfo = $this->session->userdata('userInfo');
+		if(empty($userInfo['loginName']))
+			redirect('login');	
+		
+			
 	}
 }
 
