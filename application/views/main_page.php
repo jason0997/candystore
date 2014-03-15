@@ -4,10 +4,10 @@
 
 <?php
 	echo 'Hi, ' .  $userInfo['first'] . ' ' . $userInfo['last'] . '!';
-	echo form_open('base\logout');
+	echo form_open('base/logout');
 	echo form_submit('submit', 'Log out');
 	echo form_close();
-	echo form_open('base\shopping_cart_main');
+	echo form_open('base/shopping_cart_main');
 	echo form_submit('submit', 'Shopping Cart');
 	echo form_close();
 ?>	

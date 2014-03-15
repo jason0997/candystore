@@ -19,7 +19,7 @@
 	echo form_close();
 ?>	
 <?php 
-	echo form_open('login\registerForm');
+	echo form_open('login/registerForm');
 	echo form_submit('submit', 'Register');
 	echo form_close();
 ?>

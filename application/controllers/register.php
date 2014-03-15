@@ -49,7 +49,8 @@ class Register extends CI_Controller {
 	
 			$this->customer_model->insert($customer);
 			$this->session->set_userdata('userInfo',$userInfo);
-			$this->load->view('register_success');
+			$data['loginName'] = $loginName;
+			$this->load->view('register_success',$data);
 		}
 		else{
 			$this->load->view('register_page', $data);
