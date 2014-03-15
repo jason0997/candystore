@@ -230,7 +230,10 @@ class Base extends CI_Controller {
 		$products = array();
 		foreach ($shopping_cart as $shopping_cart_item){
 			$product = $this->product_model->get($shopping_cart_item['product_id']);
-			array_push($products, $product);
+			$item = array();
+			array_push($item, $product);			
+			array_push($item, $shopping_cart_item['number']);
+			array_push($products,$item);
 		}
 		$data['products'] = $products;
 		$this->load->view('shopping_cart_main_page', $data);
