@@ -228,22 +228,32 @@ class Base extends CI_Controller {
 			redirect('login');	
 		$shopping_cart = $this->session->userdata('shopping_cart');		
 		$products = array();
+		$totalCost = 0;
 		foreach ($shopping_cart as $shopping_cart_item){
 			$product = $this->product_model->get($shopping_cart_item['product_id']);
 			$item = array();
 			array_push($item, $product);			
 			array_push($item, $shopping_cart_item['number']);
 			array_push($products,$item);
-		}
+			$totalCost = $totalCost + $item[0]->price * $item[1];
+		}		
 		$data['products'] = $products;
+		$data['totalCost'] = $totalCost;
 		$this->load->view('shopping_cart_main_page', $data);
 	}
-	function remove_item_shopping_cart(){
+	function remove_item_shopping_cart($id){
 		$userInfo = $this->session->userdata('userInfo');
 		if(empty($userInfo['loginName']))
 			redirect('login');	
-		
-			
+		$shopping_cart = $this->session->userdata('shopping_cart');		
+		$result_shopping_cart = array();
+		foreach ($shopping_cart as $shopping_cart_item){
+			if($shopping_cart_item['product_id'] != $id){
+				array_push($result_shopping_cart, $shopping_cart_item);
+			}
+		}			
+		$this->session->set_userdata('shopping_cart', $result_shopping_cart);
+		$this->load->view('remove_success');
 	}
 }
 
