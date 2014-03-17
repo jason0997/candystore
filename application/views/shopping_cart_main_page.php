@@ -19,9 +19,14 @@
 				echo "</tr>";
 			}
 			echo "<table>";
+			echo "<hr />";
+			echo "<h4> Total Cost: " . $totalCost . "</h4>";
+			$status = "checkout";
+			echo form_open("base/confirm_checkout/$status");
+			echo form_submit('submit', 'Checkout');
+			echo form_close();
+
 		}else{
 			echo "<h3> The Shopping cart is empty!</h3>";
 		}
-		echo "<hr />";
-		echo "<h4> Total Cost: " . $totalCost . "</h4>";
 ?>	

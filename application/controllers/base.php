@@ -188,10 +188,12 @@ class Base extends CI_Controller {
 		$shopping_cart = $this->session->userdata('shopping_cart');
 		$exist = false;
  		if(empty($userInfo['loginName']))
-			redirect('login');			
-		foreach ($shopping_cart as $exist_item){
-			if($id == $exist_item['product_id'])
-				$exist = true;
+			redirect('login');		
+		if(!empty($shopping_cart)){	
+			foreach ($shopping_cart as $exist_item){
+				if($id == $exist_item['product_id'])
+					$exist = true;
+			}
 		}
 		if(!$exist){
 			$data['product'] = $this->product_model->get($id);
@@ -208,7 +210,7 @@ class Base extends CI_Controller {
 		if(empty($userInfo['loginName']))
 			redirect('login');	
 		$this->load->library('form_validation');
-		$this->form_validation->set_rules('orderNumber','Order Number','required|numeric|greater_than[0]');
+		$this->form_validation->set_rules('orderNumber','Order Number','required|integer|greater_than[0]');
 		$product = $this->product_model->get($id);
 		if ($this->form_validation->run() == true){
 			$shopping_cart_item = array('product_id'=>$id, 'number'=>$this->input->post('orderNumber'));
@@ -229,14 +231,16 @@ class Base extends CI_Controller {
 		$shopping_cart = $this->session->userdata('shopping_cart');		
 		$products = array();
 		$totalCost = 0;
-		foreach ($shopping_cart as $shopping_cart_item){
-			$product = $this->product_model->get($shopping_cart_item['product_id']);
-			$item = array();
-			array_push($item, $product);			
-			array_push($item, $shopping_cart_item['number']);
-			array_push($products,$item);
-			$totalCost = $totalCost + $item[0]->price * $item[1];
-		}		
+		if(!empty($shopping_cart)){
+			foreach ($shopping_cart as $shopping_cart_item){
+				$product = $this->product_model->get($shopping_cart_item['product_id']);
+				$item = array();
+				array_push($item, $product);			
+				array_push($item, $shopping_cart_item['number']);
+				array_push($products,$item);
+				$totalCost = $totalCost + $item[0]->price * $item[1];
+			}		
+		}
 		$data['products'] = $products;
 		$data['totalCost'] = $totalCost;
 		$this->load->view('shopping_cart_main_page', $data);
@@ -255,6 +259,91 @@ class Base extends CI_Controller {
 		$this->session->set_userdata('shopping_cart', $result_shopping_cart);
 		$this->load->view('remove_success');
 	}
+
+	function confirm_checkout($status){
+		$userInfo = $this->session->userdata('userInfo');
+		if(empty($userInfo['loginName']))
+			redirect('login');		
+		$shopping_cart = $this->session->userdata('shopping_cart');		
+		if($status == "checkout"){
+			$products = array();
+			$totalCost = 0;
+			foreach ($shopping_cart as $shopping_cart_item){
+				$product = $this->product_model->get($shopping_cart_item['product_id']);
+				$item = array();
+				array_push($item, $product);			
+				array_push($item, $shopping_cart_item['number']);
+				array_push($products,$item);
+				$totalCost = $totalCost + $item[0]->price * $item[1];
+			}
+			$data['products'] = $products;
+			$data['totalCost'] = $totalCost;
+			$this->session->set_userdata('totalCost', $totalCost);
+			$this->load->view("confirm_checkout_page",$data);
+		}else if($status == "confirm"){
+			$this->load->view("credit_card_info_page");
+		}
+	}
+	function checkout(){
+		$userInfo = $this->session->userdata('userInfo');
+		if(empty($userInfo['loginName']))
+			redirect('login');
+		$this->load->library('form_validation');
+		$this->form_validation->set_rules('ccnumber','Credit Card Number','required|numeric|exact_length[16]');
+		$this->form_validation->set_rules('expiredate','Expire Date','required');
+		$shopping_cart = $this->session->userdata('shopping_cart');
+		$string_date = $this->input->post('expiredate');		
+		$pattern = "/^\d{2}\/\d{2}$/";
+		$data = array();	
+		$current_year = date('y');
+		$current_month = date('m');
+		if ($this->form_validation->run() == true){
+			$totalCost =  $this->session->userdata('totalCost');
+			if(preg_match($pattern, $string_date) && !empty($totalCost)){
+				$date = explode('/',$string_date);
+				$month = $date[0];
+				$year = $date[1];
+				if((int)$month > 12 || (int)$month < 1)
+					$data['error'] = "Invalid Date(MM/YY).";
+				else if((int)$year < $current_year || ((int)$year == $current_year && (int)$month <= $current_month))
+					$data['error'] = "Your Credit Card has expired.";									
+				else{					
+					$this->load->model('order_model');
+					$this->load->model('Order');
+					$order= new Order();
+					$order->customer_id = $userInfo["id"];
+					$order->order_date = date("Y-m-d");
+					$order->order_time = date("H:i:s");
+					$order->total = $totalCost;
+					$order->creditcard_number = $this->input->post("ccnumber");
+					$order->creditcard_month = $month;
+					$order->creditcard_year = $year;
+					$order_id= $this->order_model->insert($order);
+					foreach ($shopping_cart as $shopping_cart_item){
+						$this->load->model('orderitem_model');
+						$this->load->model('OrderItem');
+						$orderitem= new OrderItem();						
+						$orderitem->order_id = $order_id;
+						$orderitem->product_id = $shopping_cart_item['product_id'];
+						$orderitem->quantity =$shopping_cart_item['number'];
+						$this->orderitem_model->insert($orderitem);												
+					}
+					$this->session->set_userdata('totalCost', '');
+					$this->session->set_userdata('shopping_cart', array());
+					$this->load->view('pay_success');
+				}
+			}else if(empty($totalCost)){	
+				$data['error'] = "Error! Please go back to the shopping cart page";									
+			}else{
+				$data['error'] = "The Expire Date should follow the format (MM/YY).";		
+			}
+			if(isset($data['error']))
+				$this->load->view('credit_card_info_page',$data);
+		}else{
+			$this->load->view('credit_card_info_page');
+		}
+	}
+	
 }
 
 /* End of file welcome.php */

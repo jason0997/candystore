@@ -31,11 +31,11 @@ class Login extends CI_Controller {
 			$error = array('error' => "Your password or login name is incorrect!");
 			$this->load->view('login_page', $error);	
 		}else if($password == $customer->password && $loginName == "admin"){
-			$userInfo = array('loginName' => $loginName, 'password' => $password, 'first' => $customer->first, 'last' => $customer->last);
+			$userInfo = array('loginName' => $loginName, 'password' => $password, 'first' => $customer->first, 'last' => $customer->last, 'id' => $customer->id);
 			$this->session->set_userdata('userInfo',$userInfo);
 			redirect('base/admin_main');
 		}else if($loginName == $customer->login && $password == $customer->password){
-			$userInfo = array('loginName' => $loginName, 'password' => $password, 'first' => $customer->first, 'last' => $customer->last);
+			$userInfo = array('loginName' => $loginName, 'password' => $password, 'first' => $customer->first, 'last' => $customer->last, 'id' => $customer->id);
 			$this->session->set_userdata('userInfo',$userInfo);
 			$this->session->set_userdata('shopping_cart', array());
 			redirect('base');
