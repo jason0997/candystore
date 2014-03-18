@@ -297,6 +297,7 @@ class Base extends CI_Controller {
 		$data = array();	
 		$current_year = date('y');
 		$current_month = date('m');
+		$ccnumber =$this->input->post("ccnumber");
 		if ($this->form_validation->run() == true){
 			$totalCost =  $this->session->userdata('totalCost');
 			if(preg_match($pattern, $string_date) && !empty($totalCost)){
@@ -315,7 +316,7 @@ class Base extends CI_Controller {
 					$order->order_date = date("Y-m-d");
 					$order->order_time = date("H:i:s");
 					$order->total = $totalCost;
-					$order->creditcard_number = $this->input->post("ccnumber");
+					$order->creditcard_number = $ccnumber;
 					$order->creditcard_month = $month;
 					$order->creditcard_year = $year;
 					$order_id= $this->order_model->insert($order);
@@ -330,15 +331,22 @@ class Base extends CI_Controller {
 					}
 					$this->session->set_userdata('totalCost', '');
 					$this->session->set_userdata('shopping_cart', array());
-					$this->load->view('pay_success');
+					$data['userInfo']=$userInfo;
+					$first_ccnumber =substr($ccnumber, 0,6);
+					$second_ccnumber = substr($ccnumber, 12);
+					$encryptCCNumber = $first_ccnumber . "******" . $second_ccnumber; 
+					$data['encryptCCNumber'] = $encryptCCNumber;
+					$data['totalCost'] = $totalCost;
+					$this->load->view('pay_success', $data);
 				}
 			}else if(empty($totalCost)){	
 				$data['error'] = "Error! Please go back to the shopping cart page";									
 			}else{
 				$data['error'] = "The Expire Date should follow the format (MM/YY).";		
 			}
-			if(isset($data['error']))
+			if(isset($data['error']) && !empty($data['error'])){
 				$this->load->view('credit_card_info_page',$data);
+			}
 		}else{
 			$this->load->view('credit_card_info_page');
 		}
