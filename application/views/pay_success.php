@@ -10,6 +10,7 @@ $time = time();
 <h4>First Name: <?php echo $userInfo['first']?></h4>
 <h4>Last Name: <?php echo $userInfo['last'] ?></h4>
 <h4>Card Number: <?php echo $encryptCCNumber?></h4>
+<h5>Order Id: <?php echo $orderID?></h4>
 <hr />
 <h3>$<?php echo $totalCost?></h3>
 <hr />

@@ -16,6 +16,7 @@
 				echo "<td> <img src='" . base_url() . "images/product/" . $product->photo_url . "' width='100px' /></td>";
 				echo "<td>"	. $item[1] . "</td>";				
 				echo "<td>"	. anchor('base/remove_item_shopping_cart/' . $product->id ,'Remove') . "</td>";				
+				echo "<td>"	. anchor('base/edit_item_shopping_cart/' . $product->id ,'Edit') . "</td>";				
 				echo "</tr>";
 			}
 			echo "<table>";

@@ -182,6 +182,7 @@ class Base extends CI_Controller {
 	}
 	
 	function add_shopping_cart($id){
+	   
 		$this->load->model("product_model");
 		$this->load->model("Product");
 		$userInfo = $this->session->userdata('userInfo');
@@ -261,6 +262,7 @@ class Base extends CI_Controller {
 	}
 
 	function confirm_checkout($status){
+
 		$userInfo = $this->session->userdata('userInfo');
 		if(empty($userInfo['loginName']))
 			redirect('login');		
@@ -337,7 +339,31 @@ class Base extends CI_Controller {
 					$encryptCCNumber = $first_ccnumber . "******" . $second_ccnumber; 
 					$data['encryptCCNumber'] = $encryptCCNumber;
 					$data['totalCost'] = $totalCost;
+					$data['orderID'] = $order_id;
+					$config['protocol'] = 'sendmail';
+					$config['mailpath'] = '/usr/sbin/sendmail';
+					$config['charset'] = 'iso-8859-1';
+					$config['wordwrap'] = TRUE;
+					$config = Array(
+						'protocol' => 'smtp',
+						'smtp_host' => 'ssl://smtp.googlemail.com',
+						'smtp_port' => 465,
+						'smtp_user' => 'jasonlu1993@gmail.com',
+						'smtp_pass' => 'ca1234567',
+						'mailtype'  => 'html', 
+						'charset'   => 'iso-8859-1'
+					);
 					$this->load->view('pay_success', $data);
+					$view = $this->load->view('pay_success',NULL,TRUE);
+					$this->load->library('email', $config);
+					$this->email->set_newline("\r\n");
+					$this->email->from('jasonlu1993@gmail.com', 'Candy Store');
+					$this->email->to($userInfo['email']); 
+					
+					$this->email->subject('Candy Store Receipt');
+					$this->email->message($view);	
+					
+					$this->email->send();
 				}
 			}else if(empty($totalCost)){	
 				$data['error'] = "Error! Please go back to the shopping cart page";									
@@ -352,6 +378,51 @@ class Base extends CI_Controller {
 		}
 	}
 	
+	function edit_item_shopping_cart($id){
+		$userInfo = $this->session->userdata('userInfo');
+		if(empty($userInfo['loginName']))
+			redirect('login');	
+		$shopping_cart = $this->session->userdata('shopping_cart');		
+		$result_shopping_cart = array();
+		foreach ($shopping_cart as $shopping_cart_item){
+			if($shopping_cart_item['product_id'] == $id){
+				$data['product'] = $this->product_model->get($id);
+				$data['number'] = $shopping_cart_item['number'];
+			}
+		}
+		$this->load->view('edit_shopping_cart_item',$data);			
+	}
+
+	function update_item_shopping_cart($id){
+		$userInfo = $this->session->userdata('userInfo');
+		if(empty($userInfo['loginName']))
+			redirect('login');	
+		$this->load->library('form_validation');		
+		$this->form_validation->set_rules('number','Order Amount','required|integer|greater_than[0]');
+		if ($this->form_validation->run() == true){
+			$shopping_cart = $this->session->userdata('shopping_cart');		
+			$result_shopping_cart = array();
+			$newAmount = $this->input->post('number');
+			foreach ($shopping_cart as $shopping_cart_item){
+				if($shopping_cart_item['product_id'] == $id){
+					$shopping_cart_item['number'] = $newAmount;
+				}			
+				array_push($result_shopping_cart, $shopping_cart_item);			
+			}	
+			$this->session->set_userdata('shopping_cart',$result_shopping_cart);
+			$this->load->view('edit_success');		
+		}else{
+			$shopping_cart = $this->session->userdata('shopping_cart');		
+			$result_shopping_cart = array();
+			foreach ($shopping_cart as $shopping_cart_item){
+				if($shopping_cart_item['product_id'] == $id){
+					$data['product'] = $this->product_model->get($id);
+					$data['number'] = $shopping_cart_item['number'];
+				}
+			}
+			$this->load->view('edit_shopping_cart_item', $data);
+		}
+	}
 }
 
 /* End of file welcome.php */
