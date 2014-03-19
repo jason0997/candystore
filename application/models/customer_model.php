@@ -6,6 +6,10 @@ class Customer_model extends CI_Model {
 		    		$this->load->model('Customer');
            $this->load->database();
      }
+	function delete_all(){
+		$sql = "DELETE  FROM customer";
+		return $this->db->query($sql);	
+	}
 	function getAll()
 	{
 		$query = $this->db->get('customer');

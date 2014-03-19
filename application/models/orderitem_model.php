@@ -23,7 +23,10 @@ class OrderItem_model extends CI_Model {
 	function delete($id) {
 		return $this->db->delete("order_item",array('id' => $id ));
 	}
-	
+	function delete_all(){
+		$sql = "DELETE FROM order_item";
+		return $this->db->query($sql);	
+	}
 	function insert($OrderItem) {
 		return $this->db->insert("order_item", array('order_id' => $OrderItem->order_id,
 				                                  'product_id' => $OrderItem->product_id,
@@ -37,6 +40,10 @@ class OrderItem_model extends CI_Model {
 											      'quantity' => $OrderItem->quantity));
 	}
 	
-	
+	function get_order($id){
+		$query = $this->db->get_where('order_item',array('order_id' => $id));
+		
+		return $query->result('OrderItem');	
+	}
 }
 ?>

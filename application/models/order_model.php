@@ -6,6 +6,10 @@ class Order_model extends CI_Model {
 		    		$this->load->model('Order');
            $this->load->database();
      }
+	function delete_all(){
+		$sql = "DELETE  FROM order";
+		return $this->db->query($sql);	
+	}
 
 	function getAll()
 	{  

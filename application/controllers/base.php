@@ -39,11 +39,14 @@ class Base extends CI_Controller {
 		$userInfo = $this->session->userdata('userInfo');
 		if(empty($userInfo['loginName']) || $userInfo['loginName']!="admin")
 			redirect('login');
+		if($this->input->post('Delete') == true){
+			redirect('base/delete_all_info');
+		}
 		$this->load->view('admin_page');
 	}
 	
 	
-	public function product_management(){			//1. display all products
+	public function product_management(){			
 		$userInfo = $this->session->userdata('userInfo');
 		if(empty($userInfo['loginName']) || $userInfo['loginName']!="admin")
 			redirect('login');
@@ -59,14 +62,53 @@ class Base extends CI_Controller {
 		$userInfo = $this->session->userdata('userInfo');
 		if(empty($userInfo['loginName']) || $userInfo['loginName']!="admin")
 			redirect('login');	
-		$this->load->view('display_order_page');		
+		$this->load->model('order_model');
+		$orders = $this->order_model->getAll();
+		$orders_view_array = array();
+		$orders_view_item = array();
+		foreach ($orders as $order){
+			$orders_view_item['order_id'] = $order->id;
+			$orders_view_item['order_date'] = $order->order_date;
+			$orders_view_item['order_time'] = $order->order_time;
+			$orders_view_item['total'] = $order->total;
+					
+			array_push($orders_view_array, $orders_view_item);
+		}		
+		$data['orders_view_array'] = $orders_view_array;
+		$this->load->view('display_order_page', $data);		
 	}
-	
-	public function delete_info(){
+	function admin_vieworder($id){
 		$userInfo = $this->session->userdata('userInfo');
 		if(empty($userInfo['loginName']) || $userInfo['loginName']!="admin")
 			redirect('login');	
-		$this->load->view('delete_success');
+		$this->load->model('orderitem_model');
+		$this->load->model('orderitem');
+		$orderitems = $this->orderitem_model->get_order($id);
+		$products = array();
+		foreach ($orderitems as $orderitem){
+			$product['product_id'] = $orderitem->product_id;
+			$temp_product = $this->product_model->get($product['product_id']);
+			$product['name'] = $temp_product->name;
+			$product['number'] = $orderitem->quantity;
+ 			
+			array_push($products, $product);
+		}
+		$data['id'] = $id;
+		$data['products'] = $products;
+		$this->load->view('order_detail_page',$data);
+	}
+	function delete_all_info(){
+		$userInfo = $this->session->userdata('userInfo');
+		if(empty($userInfo['loginName']) || $userInfo['loginName']!="admin")
+			redirect('login');	
+			
+		$this->load->model('orderitem_model');
+		$this->load->model('order_model');
+		$this->load->model('customer_model');
+		$this->customer_model->delete_all();
+		$this->order_model->delete_all();
+		$this->orderitem_model->delete_all();
+		$this->load->view('delete_all_info_success');		
 	}
     
 	public function newForm() {
