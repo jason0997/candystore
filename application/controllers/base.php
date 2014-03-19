@@ -31,7 +31,8 @@ class Base extends CI_Controller {
 	
 	
 	public function logout(){
-		$this->session->set_userdata('userInfo',array('loginName' => '', 'password' => '', 'first' => '', 'last' => ''));
+		$this->session->set_userdata('userInfo',array('loginName' => '', 'password' => '', 'first' => '', 'last' => '', 'email' => '', 'id' => ''));
+		$this->session->set_userdata('shopping_cart',array());
 		redirect('login');
 	}
 
@@ -108,6 +109,8 @@ class Base extends CI_Controller {
 		$this->customer_model->delete_all();
 		$this->order_model->delete_all();
 		$this->orderitem_model->delete_all();
+		$this->session->set_userdata('userInfo',array('loginName' => '', 'password' => '', 'first' => '', 'last' => '', 'email' => '', 'id' => ''));
+		$this->session->set_userdata('shopping_cart',array());
 		$this->load->view('delete_all_info_success');		
 	}
     
@@ -258,6 +261,8 @@ class Base extends CI_Controller {
 		if ($this->form_validation->run() == true){
 			$shopping_cart_item = array('product_id'=>$id, 'number'=>$this->input->post('orderNumber'));
 			$shopping_cart = $this->session->userdata('shopping_cart');
+			if(!$shopping_cart)
+				$shopping_cart = array();
 			array_push($shopping_cart, $shopping_cart_item);
 			$this->session->set_userdata('shopping_cart', $shopping_cart);
 			$this->load->view('adding_success');
